@@ -17,6 +17,7 @@ class AppRoutes {
 
   /// Screen 6: Team Members / Profile (Member 2)
   static const String team = '/team';
+  static const String memberProfile = '/member-profile';
 
   /// Unique Feature: Configurable SLA Threshold Settings (Member 1 logic + Member 3 UI)
   static const String slaSettings = '/sla-settings';

@@ -8,6 +8,8 @@ import 'screens/shell/foundation_overview_screen.dart';
 import 'screens/tasks/create_edit_task_screen.dart';
 import 'screens/tasks/task_details_screen.dart';
 import 'screens/tasks/task_list_screen.dart';
+import 'models/team_member.dart';
+import 'screens/team/member_profile_screen.dart';
 import 'screens/team/team_screen.dart';
 import 'services/storage_service.dart';
 
@@ -49,6 +51,17 @@ class SlaTrackerApp extends StatelessWidget {
             CreateEditTaskScreen(storageService: storageService),
         AppRoutes.team: (context) =>
             TeamScreen(storageService: storageService),
+        AppRoutes.memberProfile: (context) {
+          final member =
+              ModalRoute.of(context)?.settings.arguments as TeamMember?;
+          if (member != null) {
+            return MemberProfileScreen(
+              storageService: storageService,
+              member: member,
+            );
+          }
+          return TeamScreen(storageService: storageService);
+        },
         AppRoutes.slaSettings: (context) =>
             SlaSettingsScreen(storageService: storageService),
       },
