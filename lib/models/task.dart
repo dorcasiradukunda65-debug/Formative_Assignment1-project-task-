@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Task priority levels
+/// Task priority levels matching the reference UI
 enum TaskPriority {
   low,
   medium,
@@ -40,14 +40,14 @@ enum TaskPriority {
       case TaskPriority.medium:
         return Icons.remove_rounded;
       case TaskPriority.high:
-        return Icons.arrow_upward_rounded;
+        return Icons.flag_rounded;
       case TaskPriority.urgent:
         return Icons.priority_high_rounded;
     }
   }
 }
 
-/// Task workflow progression statuses
+/// Task workflow statuses matching the reference UI
 enum TaskStatus {
   todo,
   inProgress,
@@ -82,26 +82,30 @@ enum TaskStatus {
 }
 
 /// Core Task model for the SLA Tracker.
-/// Conforms to the agreed interface contract:
-/// - id, title, description, assigneeId, priority, deadline, status, createdAt
+/// Contains all fields required by the reference screenshots:
+/// title, description, category, assigneeId, priority, deadline, status, notes, createdAt
 class Task {
   final String id;
   final String title;
   final String description;
+  final String category;
   final String? assigneeId;
   final TaskPriority priority;
   final DateTime deadline;
   final TaskStatus status;
+  final String notes;
   final DateTime createdAt;
 
   const Task({
     required this.id,
     required this.title,
-    required this.description,
+    this.description = '',
+    this.category = 'General',
     this.assigneeId,
     required this.priority,
     required this.deadline,
     required this.status,
+    this.notes = '',
     required this.createdAt,
   });
 
@@ -114,10 +118,12 @@ class Task {
       'id': id,
       'title': title,
       'description': description,
+      'category': category,
       'assigneeId': assigneeId,
       'priority': priority.name,
       'deadline': deadline.toIso8601String(),
       'status': status.name,
+      'notes': notes,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -128,6 +134,7 @@ class Task {
       id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? 'General',
       assigneeId: json['assigneeId'] as String?,
       priority: TaskPriority.values.firstWhere(
         (p) => p.name == json['priority'],
@@ -138,6 +145,7 @@ class Task {
         (s) => s.name == json['status'],
         orElse: () => TaskStatus.todo,
       ),
+      notes: json['notes'] as String? ?? '',
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
@@ -147,20 +155,24 @@ class Task {
     String? id,
     String? title,
     String? description,
+    String? category,
     String? assigneeId,
     TaskPriority? priority,
     DateTime? deadline,
     TaskStatus? status,
+    String? notes,
     DateTime? createdAt,
   }) {
     return Task(
       id: id ?? this.id,
       title: title ?? this.title,
       description: description ?? this.description,
+      category: category ?? this.category,
       assigneeId: assigneeId ?? this.assigneeId,
       priority: priority ?? this.priority,
       deadline: deadline ?? this.deadline,
       status: status ?? this.status,
+      notes: notes ?? this.notes,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -175,5 +187,5 @@ class Task {
 
   @override
   String toString() =>
-      'Task(id: $id, title: $title, status: ${status.name}, deadline: $deadline)';
+      'Task(id: $id, title: $title, category: $category, status: ${status.name}, deadline: $deadline)';
 }

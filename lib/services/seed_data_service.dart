@@ -1,148 +1,191 @@
 import '../models/task.dart';
 import '../models/team_member.dart';
 
-/// Provides initial realistic sample data for the software engineering team.
+/// Provides initial realistic sample data matching the reference UI exactly.
 class SeedDataService {
-  /// Default Team Members
+  /// Default Team Members matching the UI wireframe
   static List<TeamMember> get sampleMembers => const [
         TeamMember(
           id: 'user_1',
-          name: 'Alex Rivera',
-          email: 'alex.rivera@teamtracker.dev',
-          role: 'Tech Lead / Architect',
-          avatarColorHex: '4F46E5', // Indigo
+          name: 'John Doe',
+          email: 'john.doe@example.com',
+          role: 'Project Manager',
+          avatarColorHex: '2563EB', // Blue
         ),
         TeamMember(
           id: 'user_2',
-          name: 'Maya Chen',
-          email: 'maya.chen@teamtracker.dev',
-          role: 'Frontend Engineer',
-          avatarColorHex: '06B6D4', // Cyan
+          name: 'Sarah Lee',
+          email: 'sarah.lee@example.com',
+          role: 'UI/UX Designer',
+          avatarColorHex: '10B981', // Green
         ),
         TeamMember(
           id: 'user_3',
-          name: 'Liam Vance',
-          email: 'liam.vance@teamtracker.dev',
-          role: 'Backend & Cloud Specialist',
-          avatarColorHex: '10B981', // Emerald
+          name: 'Michael Kim',
+          email: 'michael.kim@example.com',
+          role: 'Mobile Developer',
+          avatarColorHex: '7C3AED', // Purple
         ),
         TeamMember(
           id: 'user_4',
-          name: 'Sophia Patel',
-          email: 'sophia.patel@teamtracker.dev',
-          role: 'QA & Security Engineer',
-          avatarColorHex: 'F59E0B', // Amber
+          name: 'Emily Wong',
+          email: 'emily.wong@example.com',
+          role: 'QA Tester',
+          avatarColorHex: '1E3A8A', // Dark Blue
+        ),
+        TeamMember(
+          id: 'user_5',
+          name: 'David Liu',
+          email: 'david.liu@example.com',
+          role: 'Documentation',
+          avatarColorHex: '0D9488', // Teal
         ),
       ];
 
-  /// Generates sample tasks with relative timestamps to always guarantee
-  /// realistic SLA distribution (On Track, At Risk, Overdue, and Completed).
+  /// Generates 12 sample tasks with relative timestamps to match the
+  /// Dashboard distribution: 5 On Track, 3 At Risk, 2 Overdue, 2 Completed.
   static List<Task> getSampleTasks([DateTime? baseTime]) {
     final now = baseTime ?? DateTime.now();
 
     return [
-      // 1. OVERDUE TASK (Critical Bug)
+      // --- 5 ON TRACK TASKS ---
       Task(
         id: 'task_1',
-        title: 'Fix race condition in payment webhook handler',
-        description:
-            'Concurrent transactions cause duplicate credit logs under peak traffic. Needs immediate mutex or transaction lock fix.',
-        assigneeId: 'user_3',
-        priority: TaskPriority.urgent,
-        deadline: now.subtract(const Duration(hours: 36)), // Overdue by 1.5 days
-        status: TaskStatus.inProgress,
-        createdAt: now.subtract(const Duration(days: 4)),
-      ),
-
-      // 2. OVERDUE TASK (Missed QA Review)
-      Task(
-        id: 'task_2',
-        title: 'Security audit on JWT refresh token rotation',
-        description:
-            'Audit token invalidation upon password reset and verify redis blacklist expiry edge cases.',
-        assigneeId: 'user_4',
+        title: 'Design Login Screen',
+        description: 'Create a clean and modern login screen for the application.',
+        category: 'UI/UX Design',
+        assigneeId: 'user_2', // Sarah Lee
         priority: TaskPriority.high,
-        deadline: now.subtract(const Duration(hours: 14)), // Overdue by 14 hours
-        status: TaskStatus.review,
-        createdAt: now.subtract(const Duration(days: 3)),
-      ),
-
-      // 3. AT RISK TASK (Due in 12 hours)
-      Task(
-        id: 'task_3',
-        title: 'Refactor Task Details UI and validation logic',
-        description:
-            'Implement rich error states, date pickers, and ensure responsive form controls across device sizes.',
-        assigneeId: 'user_2',
-        priority: TaskPriority.high,
-        deadline: now.add(const Duration(hours: 12)), // At Risk (within 24h)
+        deadline: now.add(const Duration(days: 3)), // On Track
         status: TaskStatus.inProgress,
         createdAt: now.subtract(const Duration(days: 2)),
       ),
-
-      // 4. AT RISK TASK (Due in 20 hours)
       Task(
         id: 'task_4',
-        title: 'Database migration script for multi-tenant tenancy',
-        description:
-            'Generate Flyway SQL migration scripts and verify zero-downtime schema evolution in staging environment.',
-        assigneeId: 'user_3',
+        title: 'Test Application',
+        description: 'Perform end-to-end testing of the core user flows.',
+        category: 'Quality Assurance',
+        assigneeId: 'user_4', // Emily Wong
         priority: TaskPriority.medium,
-        deadline: now.add(const Duration(hours: 20)), // At Risk (within 24h)
+        deadline: now.add(const Duration(days: 7)), // On Track
         status: TaskStatus.todo,
         createdAt: now.subtract(const Duration(days: 1)),
       ),
-
-      // 5. ON TRACK TASK (Due in 4 days)
       Task(
         id: 'task_5',
-        title: 'Design interactive SLA metrics dashboard widgets',
-        description:
-            'Build custom painter or charts displaying team velocity, completion ratios, and SLA compliance gauges.',
-        assigneeId: 'user_2',
-        priority: TaskPriority.medium,
-        deadline: now.add(const Duration(days: 4)), // On Track
-        status: TaskStatus.inProgress,
-        createdAt: now.subtract(const Duration(hours: 18)),
+        title: 'Prepare Demo',
+        description: 'Create slides and script for the final project presentation.',
+        category: 'Documentation',
+        assigneeId: 'user_5', // David Liu
+        priority: TaskPriority.low,
+        deadline: now.add(const Duration(days: 10)), // On Track
+        status: TaskStatus.todo,
+        createdAt: now.subtract(const Duration(hours: 12)),
       ),
-
-      // 6. ON TRACK TASK (Due in 7 days)
       Task(
         id: 'task_6',
-        title: 'Automate release build pipeline with fastlane',
-        description:
-            'Configure CI pipeline steps to automatically build signed APKs and submit test builds to internal testers.',
-        assigneeId: 'user_1',
-        priority: TaskPriority.low,
-        deadline: now.add(const Duration(days: 7)), // On Track
+        title: 'Setup CI/CD Pipeline',
+        description: 'Configure GitHub Actions for automated testing and deployment.',
+        category: 'DevOps',
+        assigneeId: 'user_1', // John Doe
+        priority: TaskPriority.high,
+        deadline: now.add(const Duration(days: 4)), // On Track
         status: TaskStatus.todo,
-        createdAt: now.subtract(const Duration(hours: 6)),
+        createdAt: now.subtract(const Duration(days: 1)),
       ),
-
-      // 7. COMPLETED TASK
       Task(
         id: 'task_7',
-        title: 'Initialize repository architecture and core models',
-        description:
-            'Define folder structure, Task and TeamMember models, SharedPreferences storage, and SLA calculation logic.',
-        assigneeId: 'user_1',
-        priority: TaskPriority.high,
-        deadline: now.add(const Duration(days: 2)),
-        status: TaskStatus.completed,
+        title: 'Write API Documentation',
+        description: 'Document all REST endpoints using Swagger/OpenAPI.',
+        category: 'Documentation',
+        assigneeId: 'user_5', // David Liu
+        priority: TaskPriority.medium,
+        deadline: now.add(const Duration(days: 5)), // On Track
+        status: TaskStatus.inProgress,
         createdAt: now.subtract(const Duration(days: 3)),
       ),
 
-      // 8. COMPLETED TASK
+      // --- 3 AT RISK TASKS ---
+      Task(
+        id: 'task_2',
+        title: 'Implement Local Storage',
+        description: 'Integrate SharedPreferences to persist task data locally.',
+        category: 'Mobile Development',
+        assigneeId: 'user_3', // Michael Kim
+        priority: TaskPriority.urgent,
+        deadline: now.add(const Duration(hours: 18)), // At Risk (within 24h)
+        status: TaskStatus.inProgress,
+        createdAt: now.subtract(const Duration(days: 2)),
+      ),
       Task(
         id: 'task_8',
-        title: 'Implement unit tests for SLA calculation engine',
-        description:
-            'Verify all SLA state branches: onTrack, atRisk, overdue, completed, and edge conditions.',
-        assigneeId: 'user_4',
+        title: 'Fix Navigation Bug',
+        description: 'Resolve issue where back button crashes the app on the Dashboard.',
+        category: 'Bug Fix',
+        assigneeId: 'user_3', // Michael Kim
+        priority: TaskPriority.high,
+        deadline: now.add(const Duration(hours: 12)), // At Risk
+        status: TaskStatus.todo,
+        createdAt: now.subtract(const Duration(hours: 48)),
+      ),
+      Task(
+        id: 'task_9',
+        title: 'Update Dependencies',
+        description: 'Upgrade Flutter packages to their latest compatible versions.',
+        category: 'Maintenance',
+        assigneeId: 'user_1', // John Doe
+        priority: TaskPriority.low,
+        deadline: now.add(const Duration(hours: 22)), // At Risk
+        status: TaskStatus.review,
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+
+      // --- 2 OVERDUE TASKS ---
+      Task(
+        id: 'task_3',
+        title: 'Create Task Model',
+        description: 'Define the Task data structure and JSON serialization methods.',
+        category: 'Backend (Local)',
+        assigneeId: 'user_1', // John Doe
+        priority: TaskPriority.high,
+        deadline: now.subtract(const Duration(days: 1)), // Overdue
+        status: TaskStatus.inProgress,
+        createdAt: now.subtract(const Duration(days: 5)),
+      ),
+      Task(
+        id: 'task_10',
+        title: 'Review PR #42',
+        description: 'Review the pull request for the new authentication flow.',
+        category: 'Code Review',
+        assigneeId: 'user_2', // Sarah Lee
         priority: TaskPriority.medium,
-        deadline: now.subtract(const Duration(hours: 5)),
-        status: TaskStatus.completed,
+        deadline: now.subtract(const Duration(hours: 5)), // Overdue
+        status: TaskStatus.review,
         createdAt: now.subtract(const Duration(days: 2)),
+      ),
+
+      // --- 2 COMPLETED TASKS ---
+      Task(
+        id: 'task_11',
+        title: 'Initialize Repository',
+        description: 'Set up the initial Flutter project structure on GitHub.',
+        category: 'Project Setup',
+        assigneeId: 'user_1', // John Doe
+        priority: TaskPriority.urgent,
+        deadline: now.subtract(const Duration(days: 5)), // Doesn't matter, it's completed
+        status: TaskStatus.completed,
+        createdAt: now.subtract(const Duration(days: 7)),
+      ),
+      Task(
+        id: 'task_12',
+        title: 'Design Dashboard Mockups',
+        description: 'Create high-fidelity Figma mockups for the main dashboard.',
+        category: 'UI/UX Design',
+        assigneeId: 'user_2', // Sarah Lee
+        priority: TaskPriority.high,
+        deadline: now.subtract(const Duration(days: 2)),
+        status: TaskStatus.completed,
+        createdAt: now.subtract(const Duration(days: 6)),
       ),
     ];
   }

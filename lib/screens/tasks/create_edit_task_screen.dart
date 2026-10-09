@@ -27,6 +27,8 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _titleController;
   late TextEditingController _descController;
+  late TextEditingController _categoryController;
+  late TextEditingController _notesController;
   late TaskPriority _priority;
   late TaskStatus _status;
   DateTime _deadline = DateTime.now().add(const Duration(days: 3));
@@ -40,6 +42,8 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
     final task = widget.initialTask;
     _titleController = TextEditingController(text: task?.title ?? '');
     _descController = TextEditingController(text: task?.description ?? '');
+    _categoryController = TextEditingController(text: task?.category ?? '');
+    _notesController = TextEditingController(text: task?.notes ?? '');
     _priority = task?.priority ?? TaskPriority.medium;
     _status = task?.status ?? TaskStatus.todo;
     if (task != null) {
@@ -63,6 +67,8 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
   void dispose() {
     _titleController.dispose();
     _descController.dispose();
+    _categoryController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -76,6 +82,8 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
       id: widget.initialTask?.id ?? 'task_${DateTime.now().millisecondsSinceEpoch}',
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
+      category: _categoryController.text.trim().isEmpty ? 'General' : _categoryController.text.trim(),
+      notes: _notesController.text.trim(),
       assigneeId: _assigneeId,
       priority: _priority,
       deadline: _deadline,
@@ -134,6 +142,19 @@ class _CreateEditTaskScreenState extends State<CreateEditTaskScreen> {
               label: 'Description',
               hint: 'Detailed requirements and acceptance criteria',
               maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _categoryController,
+              label: 'Category',
+              hint: 'e.g. UI/UX Design',
+            ),
+            const SizedBox(height: 16),
+            AppTextField(
+              controller: _notesController,
+              label: 'Notes',
+              hint: 'Any additional notes',
+              maxLines: 2,
             ),
             const SizedBox(height: 16),
             Text('Assignee', style: AppTypography.labelLarge),
