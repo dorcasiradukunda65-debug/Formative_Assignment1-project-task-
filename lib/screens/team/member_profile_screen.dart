@@ -14,7 +14,7 @@ import '../../widgets/status_badge.dart';
 import 'widgets/add_edit_member_dialog.dart';
 
 /// Screen 6 (Part B): Team Member Profile & Workload Screen
-/// Assigned to Member 2 (Branch: feature/auth-team)
+/// Assigned to Member 2 (Branch: irakora/auth-team)
 ///
 /// Features:
 /// 1. Comprehensive Workload breakdown: Open vs. Overdue counts, total assigned, completion rate

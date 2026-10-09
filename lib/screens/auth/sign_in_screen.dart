@@ -9,7 +9,7 @@ import '../../widgets/app_text_field.dart';
 import '../../widgets/member_avatar.dart';
 
 /// Screen 1: Sign In & User Selection Screen
-/// Assigned to Member 2 (Branch: feature/auth-team)
+/// Assigned to Member 2 (Branch: irakora/auth-team)
 ///
 /// Features:
 /// 1. Credential Form with full input validation (email regex, password length)
@@ -400,7 +400,7 @@ class _SignInScreenState extends State<SignInScreen>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Member 2 • feature/auth-team: Sign In, Validation & Session',
+              'Member 2 • irakora/auth-team: Sign In, Validation & Session',
               style: AppTypography.bodySmall.copyWith(
                 color: AppColors.primaryDark,
                 fontWeight: FontWeight.w600,

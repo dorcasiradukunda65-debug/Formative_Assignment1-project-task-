@@ -17,7 +17,7 @@ enum MemberSortOption {
 }
 
 /// Screen 6 (Part A): Team Members Roster & Workload Management Screen
-/// Assigned to Member 2 (Branch: feature/auth-team)
+/// Assigned to Member 2 (Branch: irakora/auth-team)
 ///
 /// Features:
 /// 1. Real-time Member Workload calculation (Open and Overdue counts per person)
