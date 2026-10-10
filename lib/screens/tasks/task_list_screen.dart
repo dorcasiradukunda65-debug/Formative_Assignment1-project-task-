@@ -7,8 +7,6 @@ import '../../services/storage_service.dart';
 import '../../widgets/priority_badge.dart';
 import '../../widgets/sla_badge.dart';
 
-/// Screen 3: Task List Screen Shell
-/// Assigned to Member 3 (Branch: feature/dashboard-tasklist)
 class TaskListScreen extends StatefulWidget {
   final StorageService storageService;
 
@@ -21,14 +19,16 @@ class TaskListScreen extends StatefulWidget {
 class _TaskListScreenState extends State<TaskListScreen> {
   List<Task> _tasks = [];
   bool _isLoading = true;
+  String _searchQuery = '';
+  String _selectedFilter = 'All';
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _loadTasks();
   }
 
-  Future<void> _load() async {
+  Future<void> _loadTasks() async {
     final tasks = await widget.storageService.getTasks();
     setState(() {
       _tasks = tasks;
@@ -40,59 +40,116 @@ class _TaskListScreenState extends State<TaskListScreen> {
   Widget build(BuildContext context) {
     final threshold = widget.storageService.getAtRiskThresholdHours();
 
+    // Filter tasks based on search and chip selection
+    final filteredTasks = _tasks.where((task) {
+      final matchesSearch = task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          task.description.toLowerCase().contains(_searchQuery.toLowerCase());
+      
+      if (_selectedFilter == 'All') return matchesSearch;
+
+      final slaStatus = SlaService.getStatus(task, atRiskThresholdHours: threshold);
+      final statusName = slaStatus.name.replaceAllMapped(
+        RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}'
+      ).trim();
+
+      return matchesSearch && statusName.toLowerCase() == _selectedFilter.toLowerCase();
+    }).toList();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('All Tasks'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _loadTasks,
+          ),
+        ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.all(16),
+          : Column(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Text(
-                    'Assigned to Member 3 • Branch: feature/dashboard-tasklist\nImplements task search, filters (SLA, priority, assignee), and sorting.',
-                    style: AppTypography.bodySmall.copyWith(color: AppColors.primaryDark),
+                // Search Field & Filter Chips
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      TextField(
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                        decoration: InputDecoration(
+                          hintText: 'Search tasks...',
+                          prefixIcon: const Icon(Icons.search),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: ['All', 'On Track', 'At Risk', 'Overdue', 'Completed'].map((filter) {
+                            final isSelected = _selectedFilter == filter;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: ChoiceChip(
+                                label: Text(filter),
+                                selected: isSelected,
+                                selectedColor: AppColors.primaryLight,
+                                onSelected: (selected) {
+                                  if (selected) setState(() => _selectedFilter = filter);
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 16),
-                ..._tasks.map((task) {
-                  final slaStatus = SlaService.getStatus(task, atRiskThresholdHours: threshold);
-                  final timeLabel = SlaService.formattedTimeRemaining(task, atRiskThresholdHours: threshold);
 
-                  return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              PriorityBadge(priority: task.priority),
-                              SlaBadge(status: slaStatus),
-                            ],
-                          ),
-                          const SizedBox(height: 10),
-                          Text(task.title, style: AppTypography.titleMedium),
-                          const SizedBox(height: 6),
-                          Text(
-                            timeLabel,
-                            style: AppTypography.bodySmall.copyWith(
-                              color: slaStatus.color,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                }),
+                // Task List Cards
+                Expanded(
+                  child: filteredTasks.isEmpty
+                      ? const Center(child: Text('No tasks found matching your filter.'))
+                      : ListView.builder(
+                          itemCount: filteredTasks.length,
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          itemBuilder: (context, index) {
+                            final task = filteredTasks[index];
+                            final slaStatus = SlaService.getStatus(task, atRiskThresholdHours: threshold);
+                            final timeLabel = SlaService.formattedTimeRemaining(task, atRiskThresholdHours: threshold);
+
+                            return Card(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(14.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        PriorityBadge(priority: task.priority),
+                                        SlaBadge(status: slaStatus),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 10),
+                                    Text(task.title, style: AppTypography.titleMedium),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      timeLabel,
+                                      style: AppTypography.bodySmall.copyWith(
+                                        color: slaStatus.color,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                ),
               ],
             ),
     );
