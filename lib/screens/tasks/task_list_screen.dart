@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_typography.dart';
+import '../../models/sla_status.dart';
 import '../../models/task.dart';
+import '../../models/team_member.dart';
 import '../../services/sla_service.dart';
 import '../../services/storage_service.dart';
-import '../../widgets/priority_badge.dart';
 import '../../widgets/sla_badge.dart';
 
 class TaskListScreen extends StatefulWidget {
@@ -17,51 +17,65 @@ class TaskListScreen extends StatefulWidget {
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  List<Task> _tasks = [];
   bool _isLoading = true;
+  List<Task> _tasks = [];
+  Map<String, TeamMember> _memberMap = {};
+  int _atRiskThresholdHours = 24;
+
+  SlaStatus? _selectedStatusFilter;
   String _searchQuery = '';
-  String _selectedFilter = 'All';
 
   @override
   void initState() {
     super.initState();
-    _loadTasks();
+    _loadData();
   }
 
-  Future<void> _loadTasks() async {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Catch any SlaStatus filter argument passed when navigating from Dashboard
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is SlaStatus) {
+      _selectedStatusFilter = args;
+    }
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+
     final tasks = await widget.storageService.getTasks();
+    final members = await widget.storageService.getMembers();
+    final threshold = widget.storageService.getAtRiskThresholdHours();
+
     setState(() {
       _tasks = tasks;
+      _memberMap = {for (var m in members) m.id: m};
+      _atRiskThresholdHours = threshold;
       _isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final threshold = widget.storageService.getAtRiskThresholdHours();
-
-    // Filter tasks based on search and chip selection
     final filteredTasks = _tasks.where((task) {
-      final matchesSearch = task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final status = SlaService.getStatus(task, atRiskThresholdHours: _atRiskThresholdHours);
+
+      final matchesFilter = _selectedStatusFilter == null || status == _selectedStatusFilter;
+      final matchesSearch = _searchQuery.isEmpty ||
+          task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           task.description.toLowerCase().contains(_searchQuery.toLowerCase());
-      
-      if (_selectedFilter == 'All') return matchesSearch;
 
-      final slaStatus = SlaService.getStatus(task, atRiskThresholdHours: threshold);
-      final statusName = slaStatus.name.replaceAllMapped(
-        RegExp(r'([A-Z])'), (match) => ' ${match.group(0)}'
-      ).trim();
-
-      return matchesSearch && statusName.toLowerCase() == _selectedFilter.toLowerCase();
+      return matchesFilter && matchesSearch;
     }).toList();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Tasks'),
+        title: const Text('Tasks'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadTasks,
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _loadData,
           ),
         ],
       ),
@@ -69,81 +83,86 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Column(
               children: [
-                // Search Field & Filter Chips
+                // Search Bar
                 Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search tasks...',
+                      prefixIcon: const Icon(Icons.search),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                    ),
+                    onChanged: (val) {
+                      setState(() {
+                        _searchQuery = val;
+                      });
+                    },
+                  ),
+                ),
+
+                // Filter Chips
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  child: Row(
                     children: [
-                      TextField(
-                        onChanged: (value) => setState(() => _searchQuery = value),
-                        decoration: InputDecoration(
-                          hintText: 'Search tasks...',
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                        ),
+                      FilterChip(
+                        label: const Text('All Tasks'),
+                        selected: _selectedStatusFilter == null,
+                        onSelected: (_) {
+                          setState(() => _selectedStatusFilter = null);
+                        },
                       ),
-                      const SizedBox(height: 12),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          children: ['All', 'On Track', 'At Risk', 'Overdue', 'Completed'].map((filter) {
-                            final isSelected = _selectedFilter == filter;
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 8.0),
-                              child: ChoiceChip(
-                                label: Text(filter),
-                                selected: isSelected,
-                                selectedColor: AppColors.primaryLight,
-                                onSelected: (selected) {
-                                  if (selected) setState(() => _selectedFilter = filter);
-                                },
-                              ),
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                      const SizedBox(width: 8),
+                      ...SlaStatus.values.map((status) {
+                        final isSelected = _selectedStatusFilter == status;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: FilterChip(
+                            label: Text(status.displayName),
+                            selected: isSelected,
+                            selectedColor: status.backgroundColor,
+                            onSelected: (_) {
+                              setState(() {
+                                _selectedStatusFilter = isSelected ? null : status;
+                              });
+                            },
+                          ),
+                        );
+                      }),
                     ],
                   ),
                 ),
 
-                // Task List Cards
+                const Divider(),
+
+                // Task List Content
                 Expanded(
                   child: filteredTasks.isEmpty
-                      ? const Center(child: Text('No tasks found matching your filter.'))
+                      ? const Center(child: Text('No matching tasks found.'))
                       : ListView.builder(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                           itemCount: filteredTasks.length,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
                           itemBuilder: (context, index) {
                             final task = filteredTasks[index];
-                            final slaStatus = SlaService.getStatus(task, atRiskThresholdHours: threshold);
-                            final timeLabel = SlaService.formattedTimeRemaining(task, atRiskThresholdHours: threshold);
+                            final slaStatus = SlaService.getStatus(
+                              task,
+                              atRiskThresholdHours: _atRiskThresholdHours,
+                            );
+                            final assignee =
+                                task.assigneeId != null ? _memberMap[task.assigneeId] : null;
 
                             return Card(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              child: Padding(
-                                padding: const EdgeInsets.all(14.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        PriorityBadge(priority: task.priority),
-                                        SlaBadge(status: slaStatus),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 10),
-                                    Text(task.title, style: AppTypography.titleMedium),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      timeLabel,
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: slaStatus.color,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                              margin: const EdgeInsets.symmetric(vertical: 6),
+                              child: ListTile(
+                                leading: SlaBadge(status: slaStatus),
+                                title: Text(task.title, style: AppTypography.titleMedium),
+                                subtitle: Text(
+                                  'Due: ${task.deadline.month}/${task.deadline.day} • Assigned: ${assignee?.name ?? 'Unassigned'}',
+                                  style: AppTypography.bodySmall,
                                 ),
                               ),
                             );
