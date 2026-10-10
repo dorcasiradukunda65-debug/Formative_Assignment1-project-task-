@@ -33,7 +33,7 @@ class SlaTrackerApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      initialRoute: AppRoutes.foundationExplorer,
+      initialRoute: AppRoutes.dashboard,
       routes: {
         AppRoutes.foundationExplorer: (context) =>
             FoundationOverviewScreen(storageService: storageService),
