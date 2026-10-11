@@ -109,9 +109,12 @@ Future<void> _openTaskDetails(Task task) async {
                   final timeLabel = SlaService.formattedTimeRemaining(task, atRiskThresholdHours: threshold);
 
                   return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _openTaskDetails(task),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14.0),
+                          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -134,7 +137,8 @@ Future<void> _openTaskDetails(Task task) async {
                         ],
                       ),
                     ),
-                  );
+                  ),
+                );
                 }),
               ],
             ),
