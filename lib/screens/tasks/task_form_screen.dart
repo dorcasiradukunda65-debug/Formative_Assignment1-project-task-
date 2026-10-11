@@ -240,7 +240,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<String>(
-                    value: assigneeExists ? _assigneeId : null,
+                    initialValue: assigneeExists ? _assigneeId : null,
                     decoration: const InputDecoration(
                       labelText: 'Assignee',
                       border: OutlineInputBorder(),
@@ -264,7 +264,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<TaskPriority>(
-                    value: _priority,
+                    initialValue: _priority,
                     decoration: const InputDecoration(
                       labelText: 'Priority',
                       border: OutlineInputBorder(),
@@ -284,7 +284,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                   const SizedBox(height: 16),
 
                   DropdownButtonFormField<TaskStatus>(
-                    value: _status,
+                    initialValue: _status,
                     decoration: const InputDecoration(
                       labelText: 'Status',
                       border: OutlineInputBorder(),
