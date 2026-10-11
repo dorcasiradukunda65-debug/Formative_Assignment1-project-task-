@@ -3,6 +3,7 @@ import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/auth/sign_in_screen.dart';
 import 'screens/dashboard/dashboard_screen.dart';
+import 'screens/navigation/main_navigation_screen.dart';
 import 'screens/settings/sla_settings_screen.dart';
 import 'screens/shell/foundation_overview_screen.dart';
 import 'screens/tasks/create_edit_task_screen.dart';
@@ -35,6 +36,7 @@ class SlaTrackerApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       initialRoute: AppRoutes.dashboard,
       routes: {
+        '/': (context) => MainNavigationScreen(storageService: storageService),
         AppRoutes.foundationExplorer: (context) =>
             FoundationOverviewScreen(storageService: storageService),
         AppRoutes.signIn: (context) =>
