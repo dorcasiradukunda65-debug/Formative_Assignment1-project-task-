@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_typography.dart';
 import '../../models/sla_status.dart';
 import '../../models/task.dart';
@@ -79,6 +81,15 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => Navigator.pushNamed(context, AppRoutes.taskForm),
+        backgroundColor: AppColors.primary,
+        icon: const Icon(Icons.add_rounded, color: Colors.white),
+        label: const Text(
+          'New Task',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : Column(
@@ -144,7 +155,7 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   child: filteredTasks.isEmpty
                       ? const Center(child: Text('No matching tasks found.'))
                       : ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80), // extra bottom padding for FAB
                           itemCount: filteredTasks.length,
                           itemBuilder: (context, index) {
                             final task = filteredTasks[index];
@@ -164,6 +175,13 @@ class _TaskListScreenState extends State<TaskListScreen> {
                                   'Due: ${task.deadline.month}/${task.deadline.day} • Assigned: ${assignee?.name ?? 'Unassigned'}',
                                   style: AppTypography.bodySmall,
                                 ),
+                                onTap: () {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AppRoutes.taskDetails,
+                                    arguments: task.id,
+                                  );
+                                },
                               ),
                             );
                           },
