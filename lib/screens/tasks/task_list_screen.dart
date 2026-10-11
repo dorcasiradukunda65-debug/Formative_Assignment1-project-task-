@@ -6,6 +6,8 @@ import '../../services/sla_service.dart';
 import '../../services/storage_service.dart';
 import '../../widgets/priority_badge.dart';
 import '../../widgets/sla_badge.dart';
+import 'task_details_screen.dart';
+import 'task_form_screen.dart';
 
 /// Screen 3: Task List Screen Shell
 /// Assigned to Member 3 (Branch: feature/dashboard-tasklist)
@@ -35,6 +37,40 @@ class _TaskListScreenState extends State<TaskListScreen> {
       _isLoading = false;
     });
   }
+  
+Future<void> _openTaskForm({Task? task}) async {
+  final result = await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => TaskFormScreen(
+        storageService: widget.storageService,
+        task: task,
+      ),
+    ),
+  );
+
+  if (result == true && mounted) {
+    setState(() => _isLoading = true);
+    await _load();
+  }
+}
+
+Future<void> _openTaskDetails(Task task) async {
+  await Navigator.push<bool>(
+    context,
+    MaterialPageRoute(
+      builder: (_) => TaskDetailsScreen(
+        storageService: widget.storageService,
+        task: task,
+      ),
+    ),
+  );
+
+  if (mounted) {
+    setState(() => _isLoading = true);
+    await _load();
+  }
+}
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +78,14 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Tasks'),
+  title: const Text('All Tasks'),
+  actions: [
+    IconButton(
+      onPressed: () => _openTaskForm(),
+      tooltip: 'Create task',
+      icon: const Icon(Icons.add),
+    ),
+  ],
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -66,9 +109,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
                   final timeLabel = SlaService.formattedTimeRemaining(task, atRiskThresholdHours: threshold);
 
                   return Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(14.0),
-                      child: Column(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () => _openTaskDetails(task),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14.0),
+                          child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
@@ -91,7 +137,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                         ],
                       ),
                     ),
-                  );
+                  ),
+                );
                 }),
               ],
             ),
