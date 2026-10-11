@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
-import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_typography.dart';
 import '../../models/sla_status.dart';
 import '../../models/task.dart';
 import '../../models/team_member.dart';
 import '../../services/sla_service.dart';
 import '../../services/storage_service.dart';
+import '../../widgets/priority_badge.dart';
 import '../../widgets/sla_badge.dart';
+import 'task_details_screen.dart';
+import 'create_edit_task_screen.dart';
 
 class TaskListScreen extends StatefulWidget {
   final StorageService storageService;
@@ -58,12 +60,47 @@ class _TaskListScreenState extends State<TaskListScreen> {
     });
   }
 
+  Future<void> _openTaskForm({Task? task}) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => CreateEditTaskScreen(
+          storageService: widget.storageService,
+          initialTask: task,
+        ),
+      ),
+    );
+
+    if (result == true && mounted) {
+      await _loadData();
+    }
+  }
+
+  Future<void> _openTaskDetails(Task task) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TaskDetailsScreen(
+          storageService: widget.storageService,
+          task: task,
+        ),
+      ),
+    );
+
+    if (mounted) {
+      await _loadData();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredTasks = _tasks.where((task) {
-      final status = SlaService.getStatus(task, atRiskThresholdHours: _atRiskThresholdHours);
-
-      final matchesFilter = _selectedStatusFilter == null || status == _selectedStatusFilter;
+      final status = SlaService.getStatus(
+        task,
+        atRiskThresholdHours: _atRiskThresholdHours,
+      );
+      final matchesFilter =
+          _selectedStatusFilter == null || status == _selectedStatusFilter;
       final matchesSearch = _searchQuery.isEmpty ||
           task.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           task.description.toLowerCase().contains(_searchQuery.toLowerCase());
@@ -73,16 +110,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Tasks'),
+        title: const Text('All Tasks'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
+            tooltip: 'Refresh',
             onPressed: _loadData,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => Navigator.pushNamed(context, AppRoutes.taskForm),
+        onPressed: () => _openTaskForm(),
         backgroundColor: AppColors.primary,
         icon: const Icon(Icons.add_rounded, color: Colors.white),
         label: const Text(
@@ -96,7 +134,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
               children: [
                 // Search Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   child: TextField(
                     decoration: InputDecoration(
                       hintText: 'Search tasks...',
@@ -104,12 +143,11 @@ class _TaskListScreenState extends State<TaskListScreen> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                      contentPadding:
+                          const EdgeInsets.symmetric(horizontal: 12),
                     ),
                     onChanged: (val) {
-                      setState(() {
-                        _searchQuery = val;
-                      });
+                      setState(() => _searchQuery = val);
                     },
                   ),
                 ),
@@ -117,7 +155,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                 // Filter Chips
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 4),
                   child: Row(
                     children: [
                       FilterChip(
@@ -138,7 +177,8 @@ class _TaskListScreenState extends State<TaskListScreen> {
                             selectedColor: status.backgroundColor,
                             onSelected: (_) {
                               setState(() {
-                                _selectedStatusFilter = isSelected ? null : status;
+                                _selectedStatusFilter =
+                                    isSelected ? null : status;
                               });
                             },
                           ),
@@ -150,12 +190,12 @@ class _TaskListScreenState extends State<TaskListScreen> {
 
                 const Divider(),
 
-                // Task List Content
+                // Task List
                 Expanded(
                   child: filteredTasks.isEmpty
                       ? const Center(child: Text('No matching tasks found.'))
                       : ListView.builder(
-                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80), // extra bottom padding for FAB
+                          padding: const EdgeInsets.fromLTRB(16, 8, 16, 80),
                           itemCount: filteredTasks.length,
                           itemBuilder: (context, index) {
                             final task = filteredTasks[index];
@@ -163,25 +203,55 @@ class _TaskListScreenState extends State<TaskListScreen> {
                               task,
                               atRiskThresholdHours: _atRiskThresholdHours,
                             );
-                            final assignee =
-                                task.assigneeId != null ? _memberMap[task.assigneeId] : null;
+                            final timeLabel = SlaService.formattedTimeRemaining(
+                              task,
+                              atRiskThresholdHours: _atRiskThresholdHours,
+                            );
+                            final assignee = task.assigneeId != null
+                                ? _memberMap[task.assigneeId]
+                                : null;
 
                             return Card(
                               margin: const EdgeInsets.symmetric(vertical: 6),
-                              child: ListTile(
-                                leading: SlaBadge(status: slaStatus),
-                                title: Text(task.title, style: AppTypography.titleMedium),
-                                subtitle: Text(
-                                  'Due: ${task.deadline.month}/${task.deadline.day} • Assigned: ${assignee?.name ?? 'Unassigned'}',
-                                  style: AppTypography.bodySmall,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(12),
+                                onTap: () => _openTaskDetails(task),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(14.0),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          PriorityBadge(
+                                              priority: task.priority),
+                                          SlaBadge(status: slaStatus),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(task.title,
+                                          style: AppTypography.titleMedium),
+                                      const SizedBox(height: 4),
+                                      if (assignee != null)
+                                        Text(
+                                          'Assigned: ${assignee.name}',
+                                          style: AppTypography.bodySmall,
+                                        ),
+                                      const SizedBox(height: 6),
+                                      Text(
+                                        timeLabel,
+                                        style:
+                                            AppTypography.bodySmall.copyWith(
+                                          color: slaStatus.color,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                                onTap: () {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AppRoutes.taskDetails,
-                                    arguments: task.id,
-                                  );
-                                },
                               ),
                             );
                           },
