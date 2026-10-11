@@ -51,7 +51,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       thresholdHours: _atRiskThresholdHours,
     );
 
-    // Filter tasks that need attention (At Risk or Overdue)
     final urgentTasks = _tasks.where((t) {
       if (t.isCompleted) return false;
       final status = SlaService.getStatus(t, atRiskThresholdHours: _atRiskThresholdHours);
@@ -62,6 +61,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         title: const Text('Project Dashboard'),
         actions: [
+          IconButton(
+            tooltip: 'Create New Task',
+            icon: const Icon(Icons.add_circle_outline_rounded),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.taskForm),
+          ),
           IconButton(
             tooltip: 'Refresh Dashboard',
             icon: const Icon(Icons.refresh_rounded),
@@ -76,17 +80,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: ListView(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 children: [
-                  // Health Score Card
                   _buildHealthScoreCard(healthScore),
                   const SizedBox(height: 16),
 
-                  // SLA Status Breakdown
                   Text('SLA Status Breakdown', style: AppTypography.titleMedium),
                   const SizedBox(height: 8),
                   _buildSlaBreakdownRow(breakdown),
                   const SizedBox(height: 20),
 
-                  // Needs Attention Section
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -150,7 +151,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         return Expanded(
           child: InkWell(
             onTap: () {
-              // Pass the tapped status (Completed, Overdue, At Risk, On Track) as an argument
               Navigator.pushNamed(
                 context,
                 AppRoutes.taskList,
@@ -202,7 +202,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return InkWell(
       onTap: () {
-        // Tapping an attention card opens the Task List pre-filtered to this task's status
         Navigator.pushNamed(
           context,
           AppRoutes.taskList,
